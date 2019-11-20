@@ -4,7 +4,9 @@
     include 'src/Client.php';
 
     $client = new Client();
-    $client->login();
+    $response = $client->login();
+    // $html = $client->getDataHtml($response);
+    echo $response;
 
     // $postFields = array(
     //     "email" => "fritzgeralddumdum7@gmail.com",
@@ -23,12 +25,6 @@
     // $response = curl_exec($curlHandler);
     // curl_close($curlHandler);
     // echo $response;
-
-    // $html = new simple_html_dom();
-    // $html->load($response);
-    
-    // foreach($html->find('#app') as $email)
-    // echo $email->plaintext;
 ?>
 
 <!DOCTYPE html>

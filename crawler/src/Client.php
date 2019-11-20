@@ -6,6 +6,7 @@ class Client {
     const PASS_HTTP = 'y1lix2w6';
 
     private $curl;
+    private $token;
 
     function __construct()
     {
@@ -18,11 +19,23 @@ class Client {
     public function login()
     {
         // TODO: Implement login() method.
-        $this->curl->setHTTP('fritzgeralddumdum7@gmail.com', 'y1lix2w6');
-        $response = $this->curl->execute("http://nabepero.xyz/crawler");
+        $response = $this->curl->execute("http://nabepero.xyz/login/");
+        
+        $html = new simple_html_dom();
+        $html->load($response);
+        
+        foreach($html->find('input') as $inputs)
+        {
+            if($inputs->getAttribute('name') === "_token"){
+                $this->token = $inputs->getAttribute('value');
+            }
+        }
+        $this->curl->setPost(array("email" => Client::USER_HTTP, "password" => Client::PASS_HTTP, "_token" => $this->token));
+        $this->curl->setHTTP(Client::USER_HTTP, Client::PASS_HTTP);
         $this->curl->closeSession();
-        print_r($response);
-        die();
+        echo $this->token;
+
+        return $response;
     }
 
     public function getDataHtml($htmlDom) {
