@@ -1,48 +1,82 @@
 <?php
-
-class Client {
+    class Client {
 
     const USER_HTTP = 'fritzgeralddumdum7@gmail.com';
     const PASS_HTTP = 'y1lix2w6';
 
     private $curl;
-    private $token;
 
-    function __construct()
-    {
-        if($this->curl == null)
-        {
-            $this->curl = new Curl();
-        }
-    }
-
-    public function login()
-    {
-        // TODO: Implement login() method.
-        $response = $this->curl->execute("http://nabepero.xyz/login/");
-        
-        $html = new simple_html_dom();
-        $html->load($response);
-        
-        foreach($html->find('input') as $inputs)
-        {
-            if($inputs->getAttribute('name') === "_token"){
-                $this->token = $inputs->getAttribute('value');
+        function __construct() {
+            if($this->curl == null)
+            {
+                $this->curl = new Curl();
             }
         }
-        $this->curl->setPost(array("email" => Client::USER_HTTP, "password" => Client::PASS_HTTP, "_token" => $this->token));
-        $this->curl->setHTTP(Client::USER_HTTP, Client::PASS_HTTP);
-        $this->curl->closeSession();
-        echo $this->token;
 
-        return $response;
-    }
+        public function login() {
+            $res = $this->curl->execute('http://nabepero.xyz/login');
+            $this->curl->closeSession();
 
-    public function getDataHtml($htmlDom) {
-        // TODO: Implement getDataHtml() method.
-    }
+            $dom = new simple_html_dom();
+            $dom->load($res);
 
-    public function getDataJSON() {
-        // TODO: Implement getDataJSON() method.
+            // Get the token
+            $token = $dom->find('input[name=_token]', 0)->value;
+
+            $this->curl = new Curl();
+            $this->curl->setPost(array('email' => self::USER_HTTP, 'password' => self::PASS_HTTP, '_token' => $token));
+            $this->curl->setHTTP(self::USER_HTTP, self::PASS_HTTP);
+            $res = $this->curl->execute('http://nabepero.xyz/login');
+            $this->curl->closeSession();
+
+            $this->curl = new Curl();
+            $res = $this->curl->execute('http://nabepero.xyz/crawler');
+            $dom->load($res);
+
+            return $this->getDataHtml($dom);
+        }
+
+        public function getDataHtml($htmlDom) {
+            $table = $htmlDom->find('table[id=mainTable]', 0);
+
+            // initialize empty array to store the data array from each row
+            $theData = array();
+            $headers = array();
+
+            // to be used as index in an array in grouping by date          
+            $date = 0;
+
+            foreach($table->find('th') as $head)
+            {
+                $headers[] = $head->innertext;
+            }
+
+            // loop over rows
+            foreach($table->find('tr') as $k => $row)
+            {
+
+                // initialize array to store the cell data from each row
+                $rowData = array();
+                foreach($row->find('td') as $key => $cell){
+
+                    // push the cells text to the array
+                    $rowData[$headers[$key]]= $cell->innertext;
+
+                    if($headers[$key] == 'date')
+                    {
+                        $date = $cell->innertext;
+                    }
+                }
+
+                // push the rows data array to the 'big' array
+                $theData[$date][] = $rowData;
+            }
+
+            return array('th' => $headers, 'td' => $theData);
+        }
+
+        public function getDataJSON() {
+            // Sorry for not using this :(
+        }
     }
-}
+?>
